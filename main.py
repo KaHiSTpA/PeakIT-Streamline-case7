@@ -9,23 +9,23 @@ pygame.display.set_caption('Ленские Столбы: прототип')
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('arial', 24)
 
-map_park_img = pygame.image.load("assets/map_park.png").convert()
-menu_bg_img = pygame.image.load("assets/menu_bg.png").convert()
-stats_bg_img = pygame.image.load("assets/stats_bg.png").convert()
+map_park_img = pygame.image.load('assets/map_park.png').convert()
+menu_bg_img = pygame.image.load('assets/menu_bg.png').convert()
+stats_bg_img = pygame.image.load('assets/stats_bg.png').convert()
 map_park_img = pygame.transform.scale(map_park_img, (W, H))
 menu_bg_img = pygame.transform.scale(menu_bg_img, (W, H))
 stats_bg_img = pygame.transform.scale(stats_bg_img, (W, H))
 
 zone_images = {
-    1: pygame.image.load("assets/zone_1.png").convert(),
-    2: pygame.image.load("assets/zone_2.png").convert(),
-    3: pygame.image.load("assets/zone_3.png").convert(),
-    4: pygame.image.load("assets/zone_4.png").convert(),
-    5: pygame.image.load("assets/zone_5.png").convert(),
+    1: pygame.image.load('assets/zone_1.png').convert(),
+    2: pygame.image.load('assets/zone_2.png').convert(),
+    3: pygame.image.load('assets/zone_3.png').convert(),
+    4: pygame.image.load('assets/zone_4.png').convert(),
+    5: pygame.image.load('assets/zone_5.png').convert(),
 }
 zone_images = {
     i: pygame.transform.scale(
-        pygame.image.load(f"assets/zone_{i}.png").convert(), (W, H)
+        pygame.image.load(f'assets/zone_{i}.png').convert(), (W, H)
     )
     for i in range(1, 6)
 }
@@ -33,11 +33,11 @@ zone_images = {
 with open('plants.json', 'r', encoding='utf-8') as f:
     plants = json.load(f)
 zones = [
-    {"id": 1, "name": "Тропа к столбам", "rect": pygame.Rect(360, 480, 100, 100)},
-    {"id": 2, "name": "Долина Туймаада", "rect": pygame.Rect(485, 300, 100, 100)},
-    {"id": 3, "name": "Берег Лены", "rect": pygame.Rect(725, 285, 100, 100)},
-    {"id": 4, "name": "Смотровая площадка", "rect": pygame.Rect(1050, 140, 100, 100)},
-    {"id": 5, "name": "Пик Чекановского", "rect": pygame.Rect(685, 575, 100, 100)},
+    {'id': 1, 'name': 'Тропа к столбам', 'rect': pygame.Rect(360, 480, 100, 100)},
+    {'id': 2, 'name': 'Долина Туймаада', 'rect': pygame.Rect(485, 300, 100, 100)},
+    {'id': 3, 'name': 'Берег Лены', 'rect': pygame.Rect(725, 285, 100, 100)},
+    {'id': 4, 'name': 'Смотровая площадка', 'rect': pygame.Rect(1050, 140, 100, 100)},
+    {'id': 5, 'name': 'Пик Чекановского', 'rect': pygame.Rect(685, 575, 100, 100)},
 ]
 btn_start = pygame.Rect(150, 335, 300, 70)
 btn_exit = pygame.Rect(150, 480, 175, 70)
@@ -65,16 +65,15 @@ def draw_park():
     mouse_pos = pygame.mouse.get_pos()
 
     for z in zones:
-        zone_plants = [p for p in plants if p["zone"] == z["id"]]
-        zone_saved = [p for p in zone_plants if p["id"] in saved]
+        zone_plants = [p for p in plants if p['zone'] == z['id']]
+        zone_saved = [p for p in zone_plants if p['id'] in saved]
         done = len(zone_plants) > 0 and len(zone_saved) == len(zone_plants)
 
-        r = z["rect"]
+        r = z['rect']
         if r.collidepoint(mouse_pos) or done:
             color = (80, 200, 80) if done else (255, 255, 255)
 
-    draw_button(btn_park_back, "В меню", mouse_pos)
-
+    draw_button(btn_park_back, 'В меню', mouse_pos, base_color=(0, 39, 3), hover_color=(51, 71, 26))
 
 def draw_zone():
     z_img = zone_images.get(current_zone)
@@ -83,38 +82,53 @@ def draw_zone():
     else:
         screen.fill((40, 60, 40))
 
-    zone_plants = [p for p in plants if p["zone"] == current_zone]
-    for p in zone_plants:
-        color = (100, 200, 100) if p["id"] in saved else (200, 100, 100)
-        pygame.draw.circle(screen, color, (p["x"], p["y"]), 25)
-
+    zone_plants = [p for p in plants if p['zone'] == current_zone]
     mouse_pos = pygame.mouse.get_pos()
+    radius = 75
+
+    for p in zone_plants:
+        dx, dy = mouse_pos[0] - p['x'], mouse_pos[1] - p['y']
+        is_hovered = (dx ** 2 + dy ** 2) <= radius ** 2
+
+        base_color = (100, 200, 100) if p['id'] in saved else (200, 100, 100)
+
+        alpha = 180 if is_hovered else 100
+
+        surf_size = radius * 2
+        button_surf = pygame.Surface((surf_size, surf_size), pygame.SRCALPHA)
+
+        pygame.draw.circle(button_surf, (*base_color, alpha), (radius, radius), radius)
+
+        if is_hovered:
+            pygame.draw.circle(button_surf, base_color, (radius, radius), radius, width=4)
+
+        screen.blit(button_surf, (p['x'] - radius, p['y'] - radius))
 
 
 def draw_card():
-    screen.fill((20, 20, 40))
+    screen.fill((33, 65, 22))
     mouse_pos = pygame.mouse.get_pos()
     p = selected
 
-    name = font.render(p["name"], True, (255, 255, 255))
+    name = font.render(p['name'], True, (255, 255, 255))
     screen.blit(name, (150, 150))
 
-    fact = font.render("Факт: " + p["fact"], True, (150, 255, 150))
+    fact = font.render('Факт: ' + p['fact'], True, (150, 255, 150))
     screen.blit(fact, (150, 280))
 
-    if p["id"] in saved:
-        status = font.render("Уже спасено", True, (255, 220, 100))
+    if p['id'] in saved:
+        status = font.render('Уже спасено', True, (255, 220, 100))
         screen.blit(status, (150, 380))
-        draw_button(btn_cancel, "Назад", mouse_pos)
+        draw_button(btn_cancel, 'Назад', mouse_pos, base_color=(0, 39, 3), hover_color=(51, 71, 26))
     else:
-        draw_button(btn_save, "Спасти растение", mouse_pos)
-        draw_button(btn_cancel, "Назад", mouse_pos)
+        draw_button(btn_save, 'Спасти растение', mouse_pos, base_color=(0, 39, 3), hover_color=(51, 71, 26))
+        draw_button(btn_cancel, 'Назад', mouse_pos, base_color=(0, 39, 3), hover_color=(51, 71, 26))
 
 
 def draw_stats():
     screen.blit(stats_bg_img, (0, 0))
 
-    line = font.render(f"Найдено растений: {len(saved)} из {len(plants)}", True, (255, 255, 255))
+    line = font.render(f'Найдено растений: {len(saved)} из {len(plants)}', True, (255, 255, 255))
     screen.blit(line, (W // 2 - line.get_width() // 2, 290))
 
     mouse_pos = pygame.mouse.get_pos()
@@ -156,105 +170,107 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                if state == "card":
-                    state = "zone"
-                elif state == "zone":
-                    state = "park"
-                elif state == "park":
-                    state = "menu"
-                elif state == "stats":
-                    state = "menu"
-                elif state == "menu":
+                if state == 'card':
+                    state = 'zone'
+                elif state == 'zone':
+                    state = 'park'
+                elif state == 'park':
+                    state = 'menu'
+                elif state == 'stats':
+                    state = 'menu'
+                elif state == 'menu':
                     running = False
 
-            if event.key == pygame.K_SPACE and state == "card":
-                if selected and selected["id"] not in saved:
-                    saved.append(selected["id"])
-                state = "zone"
+            if event.key == pygame.K_SPACE and state == 'card':
+                if selected and selected['id'] not in saved:
+                    saved.append(selected['id'])
+                state = 'zone'
                 selected = None
 
-            if event.key == pygame.K_r and state == "stats":
+            if event.key == pygame.K_r and state == 'stats':
                 saved = []
                 selected = None
                 current_zone = None
-                state = "park"
+                state = 'park'
 
-            if event.key == pygame.K_m and state == "stats":
+            if event.key == pygame.K_m and state == 'stats':
                 saved = []
                 selected = None
                 current_zone = None
-                state = "menu"
+                state = 'menu'
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mx, my = event.pos
 
-            if state == "menu":
+            if state == 'menu':
                 if btn_start.collidepoint(mx, my):
                     saved = []
                     selected = None
                     current_zone = None
-                    state = "park"
+                    state = 'park'
                 elif btn_exit.collidepoint(mx, my):
                     running = False
 
 
-            elif state == "park":
+            elif state == 'park':
                 if btn_park_back.collidepoint(mx, my):
-                    state = "menu"
+                    state = 'menu'
                 else:
                     for z in zones:
-                        if z["rect"].collidepoint(mx, my):
-                            current_zone = z["id"]
-                            state = "zone"
+                        if z['rect'].collidepoint(mx, my):
+                            current_zone = z['id']
+                            state = 'zone'
                             break
 
-            elif state == "zone":
+            elif state == 'zone':
                 if btn_zone_back.collidepoint(mx, my):
-                    state = "park"
+                    state = 'park'
                 else:
-                    zone_plants = [p for p in plants if p["zone"] == current_zone]
+                    zone_plants = [p for p in plants if p['zone'] == current_zone]
+                    radius = 75
+
                     for p in zone_plants:
-                        dx, dy = mx - p["x"], my - p["y"]
-                        if dx * dx + dy * dy < 25 * 25:
+                        dx, dy = mx - p['x'], my - p['y']
+                        if (dx**2 + dy**2) <= radius**2:
                             selected = p
-                            state = "card"
+                            state = 'card'
                             break
 
-            elif state == "card":
+            elif state == 'card':
                 if btn_cancel.collidepoint(mx, my):
-                    state = "zone"
+                    state = 'zone'
                     selected = None
-                elif btn_save.collidepoint(mx, my) and selected and selected["id"] not in saved:
-                    saved.append(selected["id"])
-                    state = "zone"
+                elif btn_save.collidepoint(mx, my) and selected and selected['id'] not in saved:
+                    saved.append(selected['id'])
+                    state = 'zone'
                     selected = None
 
-            elif state == "stats":
+            elif state == 'stats':
                 if btn_restart.collidepoint(mx, my):
                     saved = []
                     selected = None
                     current_zone = None
-                    state = "park"
+                    state = 'park'
                 elif btn_to_menu.collidepoint(mx, my):
                     saved = []
                     selected = None
                     current_zone = None
-                    state = "menu"
+                    state = 'menu'
                 elif btn_exit_stats.collidepoint(mx, my):
                     running = False
 
-    if state in ("park", "zone") and len(saved) == len(plants):
-        state = "stats"
+    if state in ('park', 'zone') and len(saved) == len(plants):
+        state = 'stats'
 
-    if state == "menu":
+    if state == 'menu':
         draw_menu()
-    elif state == "park":
+    elif state == 'park':
         draw_park()
-    elif state == "zone":
+    elif state == 'zone':
         draw_zone()
-    elif state == "card":
+    elif state == 'card':
         draw_card()
-    elif state == "stats":
+    elif state == 'stats':
         draw_stats()
 
     pygame.display.flip()
